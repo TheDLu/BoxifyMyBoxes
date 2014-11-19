@@ -22,13 +22,17 @@ class ViewController: UIViewController {
     }
 
     func boxify() {
+//        var box1 = [2, 7, 4]
+//        var box2 = [8, 9, 3]
+//        var box3 = [5, 4, 12]
+        
         var box1 = [2, 7, 4]
         var box2 = [8, 10, 3]
         var box3 = [5, 4, 10]
-        var box4 = [2, 2, 2]
+        //var box4 = [2, 2, 2]
         
         var allBoxes = NSMutableArray()
-        allBoxes.addObjectsFromArray([box1, box2, box3, box4])
+        allBoxes.addObjectsFromArray([box1, box2, box3])
         var volumeOfAllBoxes = 0
         
         var allWidths = Array<Double>()
@@ -55,7 +59,6 @@ class ViewController: UIViewController {
         var containerHeight = 0
         
         while (allWidths.count > 0) {
-
             var boxPlaced = Int()
             var boxesDetailsArray = NSMutableArray()
             
@@ -97,21 +100,22 @@ class ViewController: UIViewController {
             allHeights.removeAtIndex(boxPlaced)
             allSurfaceAreas.removeAtIndex(boxPlaced)
             
-            if (container1WidthToPass > 0) {
+            if (container1WidthToPass > 0 && allWidths.count > 0) {
                 boxesDetailsArray = self.recursiveBoxification(allWidths, allDepths: allDepths, allHeights: allHeights, allSurfaceAreas: allSurfaceAreas, containerWidth: container1WidthToPass, containerDepth: container1DepthToPass, containerHeight: container1HeightToPass)
                 allWidths = boxesDetailsArray.objectAtIndex(0) as Array
                 allDepths = boxesDetailsArray.objectAtIndex(1) as Array
                 allHeights = boxesDetailsArray.objectAtIndex(2) as Array
                 allSurfaceAreas = boxesDetailsArray.objectAtIndex(3) as Array
             }
-            
-            if (container2DepthToPass > 0) {
+
+            if (container2DepthToPass > 0 && allWidths.count > 0) {
                 boxesDetailsArray = self.recursiveBoxification(allWidths, allDepths: allDepths, allHeights: allHeights, allSurfaceAreas: allSurfaceAreas, containerWidth: container2WidthToPass, containerDepth: container2DepthToPass, containerHeight: container2HeightToPass)
                 allWidths = boxesDetailsArray.objectAtIndex(0) as Array
                 allDepths = boxesDetailsArray.objectAtIndex(1) as Array
                 allHeights = boxesDetailsArray.objectAtIndex(2) as Array
                 allSurfaceAreas = boxesDetailsArray.objectAtIndex(3) as Array
             }
+
         }
         var volumeOfContainer = Int(containerWidth) * Int(containerDepth) * containerHeight
         println("Volume of container is: \(volumeOfContainer) measuring \(containerWidth) x \(containerDepth) x \(containerHeight)")
@@ -130,15 +134,26 @@ class ViewController: UIViewController {
         var newAllSurfaceAreas = allSurfaceAreas
         
         var containerDims = [containerWidth, containerDepth, containerHeight]// Could actually pass these into a single array earlier and passed into this func as a single array parameter
+        containerDims.sort { $1 < $0 }
         
         for i in 0..<allWidths.count {
-            if (allWidths[i] <= containerWidth && allDepths[i] <= containerDepth && allHeights[i] <= containerHeight) {
+            if (allWidths[i] <= containerDims[0] && allDepths[i] <= containerDims[1] && allHeights[i] <= containerDims[2]) {
+//            if (allWidths[i] <= containerWidth && allDepths[i] <= containerDepth && allHeights[i] <= containerHeight) {
                 boxesVolume.append(Int(allWidths[i] * allDepths[i] * allHeights[i]))
             } else {
                 boxesVolume.append(0)
             }
         }
+
         let maxVolume = boxesVolume.reduce(Int.min, combine: { max($0, $1) })
+
+        if (maxVolume == 0) {
+            boxesDetailsArray.addObject(newAllWidths)
+            boxesDetailsArray.addObject(newAllDepths)
+            boxesDetailsArray.addObject(newAllHeights)
+            boxesDetailsArray.addObject(newAllSurfaceAreas)
+            return boxesDetailsArray
+        }
         
         for i in 0..<boxesVolume.count {
             if (maxVolume == boxesVolume[i]) {
@@ -147,13 +162,21 @@ class ViewController: UIViewController {
             }
         }
         
-        var container1WidthToPass = containerWidth - allWidths[boxPlaced]
-        var container1DepthToPass = containerDepth
-        var container1HeightToPass = containerHeight
+//        var container1WidthToPass = containerWidth - allWidths[boxPlaced]
+//        var container1DepthToPass = containerDepth
+//        var container1HeightToPass = containerHeight
+//        
+//        var container2WidthToPass = containerWidth
+//        var container2DepthToPass = containerDepth - allDepths[boxPlaced]
+//        var container2HeightToPass = containerHeight
         
-        var container2WidthToPass = containerWidth
-        var container2DepthToPass = containerDepth - allDepths[boxPlaced]
-        var container2HeightToPass = containerHeight
+        var container1WidthToPass = containerDims[0] - allWidths[boxPlaced]
+        var container1DepthToPass = containerDims[1]
+        var container1HeightToPass = containerDims[2]
+        
+        var container2WidthToPass = containerDims[0]
+        var container2DepthToPass = containerDims[1] - allDepths[boxPlaced]
+        var container2HeightToPass = containerDims[2]
         
         newAllWidths.removeAtIndex(boxPlaced)
         newAllDepths.removeAtIndex(boxPlaced)
